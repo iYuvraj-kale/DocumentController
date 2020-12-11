@@ -1,10 +1,3 @@
-//
-//  DocumentViewController.swift
-//  UrgiDoctor
-//
-//  Created by Yuvraj Bharat Kale on 10/12/20.
-//
-
 import UIKit
 import MobileCoreServices
 
@@ -12,15 +5,15 @@ protocol DocPickerProtocol {
     func pickerDocument(pickedDoc urls:[URL])
     func pickerCancelled()
 }
-protocol documentPickerProtocol {
+protocol DocumentPickerProtocol {
     func selectDocument()
 }
-class DocumentViewController: UIViewController,UIDocumentMenuDelegate,UIDocumentPickerDelegate,UINavigationControllerDelegate,documentPickerProtocol {
+class DocumentViewController: UIViewController,UIDocumentMenuDelegate,UIDocumentPickerDelegate,UINavigationControllerDelegate,DocumentPickerProtocol {
     var docDelegate : DocPickerProtocol?
-
+    var docPickerDelegate : DocumentPickerProtocol?
     override func viewDidLoad() {
         super.viewDidLoad()
-
+//        docPickerDelegate = self
         // Do any additional setup after loading the view.
     }
     public func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
@@ -34,7 +27,7 @@ class DocumentViewController: UIViewController,UIDocumentMenuDelegate,UIDocument
 
     public func documentMenu(_ documentMenu:UIDocumentMenuViewController, didPickDocumentPicker documentPicker: UIDocumentPickerViewController) {
         documentPicker.delegate = self
-        present(documentPicker, animated: true, completion: nil)
+        DocumentViewController.topMostViewController2()?.present(documentPicker, animated: true, completion: nil)
     }
 
 
@@ -49,7 +42,8 @@ class DocumentViewController: UIViewController,UIDocumentMenuDelegate,UIDocument
     let importMenu = UIDocumentMenuViewController(documentTypes: [String(kUTTypePDF)], in: .import)
         importMenu.delegate = self
         importMenu.modalPresentationStyle = .formSheet
-        self.present(importMenu, animated: true, completion: nil)
+//        self.present(importMenu, animated: true, completion: nil)
+        DocumentViewController.topMostViewController2()?.present(importMenu, animated: true, completion: nil)
     }
 
     
@@ -63,4 +57,34 @@ class DocumentViewController: UIViewController,UIDocumentMenuDelegate,UIDocument
     }
     */
 
+}
+extension UIViewController {
+   static func topMostViewController2() -> UIViewController? {
+       if #available(iOS 13.0, *) {
+           let keyWindow = UIApplication.shared.windows.filter {$0.isKeyWindow}.first
+           return keyWindow?.rootViewController?.topMostViewController1()
+       }
+
+       return UIApplication.shared.keyWindow?.rootViewController?.topMostViewController1()
+   }
+
+   func topMostViewController1() -> UIViewController? {
+       if let navigationController = self as? UINavigationController {
+           return navigationController.topViewController?.topMostViewController1()
+       }
+       else if let tabBarController = self as? UITabBarController {
+           if let selectedViewController = tabBarController.selectedViewController {
+               return selectedViewController.topMostViewController1()
+           }
+           return tabBarController.topMostViewController1()
+       }
+
+       else if let presentedViewController = self.presentedViewController {
+           return presentedViewController.topMostViewController1()
+       }
+
+       else {
+           return self
+       }
+   }
 }
